@@ -39,6 +39,11 @@ param(
 $ErrorActionPreference = 'Continue'
 $ProgressPreference    = 'SilentlyContinue'
 
+# Capture the full script scriptblock here at top-level scope so the elevation
+# re-launch can write the complete script to a temp file (inside Main, MyCommand
+# ScriptBlock only contains Main's body, not the whole script).
+$Script:SELF_SCRIPTBLOCK = $MyInvocation.MyCommand.ScriptBlock
+
 # ============================================================
 #  CONSTANTS & GLOBAL STATE
 # ============================================================
@@ -4130,7 +4135,7 @@ function Main {
                 # Save the running script block to a temp file then relaunch it.
                 $tmpScript = Join-Path $env:TEMP "HWEval_elevated_$(Get-Date -Format 'yyyyMMddHHmmss').ps1"
                 try {
-                    $MyInvocation.MyCommand.ScriptBlock.ToString() | Set-Content $tmpScript -Encoding UTF8
+                    $Script:SELF_SCRIPTBLOCK.ToString() | Set-Content $tmpScript -Encoding UTF8
                     Start-Process powershell.exe -Verb RunAs `
                         -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tmpScript`" $argStr"
                     # Give elevated PS enough time to open the file, then clean up
