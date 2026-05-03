@@ -5,7 +5,7 @@ Automated hardware and software assessment for Windows laptops and desktops. Run
 ## Quick Start
 
 ```powershell
-irm https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Hardware-Evaluation.ps1 | iex
+irm https://raw.githubusercontent.com/maxdorx/hardware-eval/main/Hardware-Evaluation.ps1 | iex
 ```
 
 > Run in an elevated (Administrator) PowerShell window for full results. The script will offer to re-launch elevated automatically if needed.
