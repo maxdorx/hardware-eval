@@ -4132,17 +4132,15 @@ function Main {
                     -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" $argStr"
             } else {
                 # irm URL | iex (piped) mode: $PSCommandPath is empty.
-                # Save the running script block to a temp file then relaunch it.
-                $tmpScript = Join-Path $env:TEMP "HWEval_elevated_$(Get-Date -Format 'yyyyMMddHHmmss').ps1"
+                # Re-download from the canonical URL in the elevated session — avoids
+                # the scriptblock capture problem where MyCommand.ScriptBlock is $null in iex context.
+                $rawUrl  = 'https://raw.githubusercontent.com/maxdorx/hardware-eval/main/Hardware-Evaluation.ps1'
+                $elevCmd = "& ([scriptblock]::Create((irm '$rawUrl'))) $argStr"
                 try {
-                    $Script:SELF_SCRIPTBLOCK.ToString() | Set-Content $tmpScript -Encoding UTF8
                     Start-Process powershell.exe -Verb RunAs `
-                        -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$tmpScript`" $argStr"
-                    # Give elevated PS enough time to open the file, then clean up
-                    Start-Sleep -Milliseconds 1500
-                    Remove-Item $tmpScript -ErrorAction SilentlyContinue
+                        -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"$elevCmd`""
                 } catch {
-                    Write-Host "  [!] Could not save script to temp for elevation: $_" -ForegroundColor Red
+                    Write-Host "  [!] Could not relaunch elevated: $_" -ForegroundColor Red
                     Write-Host '      Please re-run PowerShell as Administrator manually.' -ForegroundColor Yellow
                 }
             }
